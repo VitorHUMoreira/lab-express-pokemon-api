@@ -1,13 +1,22 @@
 const express = require("express");
 
+const cors = require("cors");
+
 const PORT = 8080;
 const allPokemon = require("./data");
 
 const app = express();
 app.use(express.json());
+app.use(cors({ origin: "http://localhost:3000" }));
 
 app.get("/pokemon", (req, res) => {
   return res.status(200).json(allPokemon);
+});
+
+app.get("/pokemon/random", (req, res) => {
+  return res
+    .status(200)
+    .json(allPokemon[Math.round(Math.random() * allPokemon.length - 1)]);
 });
 
 app.get("/pokemon/:id", (req, res) => {
@@ -16,6 +25,30 @@ app.get("/pokemon/:id", (req, res) => {
     return pokemon.id === +id;
   });
   return res.status(200).json(idPokemon);
+});
+
+app.get("/search", (req, res, next) => {
+  let foundPokemon = [];
+
+  if (req.query.name) {
+    allPokemon.forEach((pokemon) => {
+      if (pokemon.name === req.query.name) {
+        foundPokemon.push(pokemon);
+      }
+    });
+  }
+
+  if (req.query.type) {
+    allPokemon.forEach((pokemon) => {
+      pokemon.types.forEach((type) => {
+        if (type === req.query.type) {
+          foundPokemon.push(pokemon);
+        }
+      });
+    });
+  }
+
+  return res.status(200).json(foundPokemon);
 });
 
 app.post("/pokemon", (req, res) => {
